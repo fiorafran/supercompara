@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { ShoppingListPanel } from "@/components/ShoppingListPanel";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -32,6 +33,7 @@ export default function RootLayout({
           </div>
         </header>
         <main className="min-h-screen">{children}</main>
+        <ShoppingListPanel />
         <footer className="border-t border-gray-200 mt-16 py-6 text-center text-sm text-gray-400">
           Precios actualizados al momento de la búsqueda · Carrefour, Coto y La Reina ·
           Rosario, Santa Fe
