@@ -1,6 +1,7 @@
 import { SearchBar } from "@/components/SearchBar";
 import { ComparisonGrid } from "@/components/ComparisonGrid";
 import { searchAll } from "@/lib/search";
+import { Suspense } from "react";
 
 interface PageProps {
   searchParams: Promise<{ q?: string }>;
@@ -43,7 +44,13 @@ export default async function ResultsPage({ searchParams }: PageProps) {
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
       <div className="mb-6">
-        <SearchBar defaultValue={query} />
+        <Suspense
+          fallback={
+            <div className="w-full h-[52px] rounded-xl border border-gray-200 bg-white" />
+          }
+        >
+          <SearchBar defaultValue={query} />
+        </Suspense>
       </div>
 
       {query.length < 2 ? (

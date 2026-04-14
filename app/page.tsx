@@ -1,4 +1,5 @@
 import { SearchBar } from "@/components/SearchBar";
+import { Suspense } from "react";
 
 export default function Home() {
   return (
@@ -11,7 +12,13 @@ export default function Home() {
           Carrefour vs La Reina · Rosario
         </p>
 
-        <SearchBar autoFocus />
+        <Suspense
+          fallback={
+            <div className="w-full h-[52px] rounded-xl border border-gray-200 bg-white" />
+          }
+        >
+          <SearchBar autoFocus />
+        </Suspense>
 
         <div className="mt-6 flex flex-wrap justify-center gap-2 text-sm">
           {[
