@@ -33,7 +33,7 @@ export default function RootLayout({
         </header>
         <main className="min-h-screen">{children}</main>
         <footer className="border-t border-gray-200 mt-16 py-6 text-center text-sm text-gray-400">
-          Precios actualizados al momento de la búsqueda · Carrefour y La Reina ·
+          Precios actualizados al momento de la búsqueda · Carrefour, Coto y La Reina ·
           Rosario, Santa Fe
         </footer>
       </body>

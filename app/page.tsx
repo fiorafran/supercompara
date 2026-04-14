@@ -9,7 +9,7 @@ export default function Home() {
           Compará precios
         </h1>
         <p className="text-gray-500 mb-8 text-lg">
-          Carrefour vs La Reina · Rosario
+          Carrefour vs La Reina vs Coto · Rosario
         </p>
 
         <Suspense
