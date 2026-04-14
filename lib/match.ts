@@ -3,99 +3,103 @@ import { normalizeName } from "./normalize";
 import type { CanonicalProduct, Product } from "./scrapers/types";
 
 /**
- * Merge Carrefour and La Reina product lists into canonical products.
+ * Merge products from all supermarkets into canonical products.
  *
  * Matching strategy:
- * 1. Primary: match by EAN (exact)
- * 2. Secondary: fuzzy match by normalized name (threshold 0.35)
- *
- * La Reina products come pre-fetched by EAN from Carrefour results,
- * so in most cases matching is direct EAN-to-EAN.
+ * 1. Primary: exact EAN match (Carrefour always has EAN; La Reina fetched by EAN)
+ * 2. Secondary: fuzzy name match for products without EAN (Coto, rare La Reina)
+ *    — only matches when name similarity is high (threshold 0.2)
+ *    — never fuzzy-matches an EAN-bearing product (avoids cross-brand false matches)
  */
-export function matchProducts(
-  carrefourItems: Product[],
-  laReinaItems: Product[]
-): CanonicalProduct[] {
-  // Build EAN map for La Reina
-  const laReinaByEan = new Map<string, Product>();
-  const laReinaUnmatched: Product[] = [];
+export function matchProducts(allProducts: Product[]): CanonicalProduct[] {
+  const byEan = new Map<string, CanonicalProduct>();
+  const noEanProducts: Product[] = [];
 
-  for (const p of laReinaItems) {
-    if (p.ean) {
-      laReinaByEan.set(p.ean, p);
-    } else {
-      laReinaUnmatched.push(p);
-    }
-  }
-
-  const canonical: CanonicalProduct[] = [];
-  const usedLaReinaEans = new Set<string>();
-
-  // For each Carrefour product, find its La Reina counterpart
-  for (const cp of carrefourItems) {
-    const canon: CanonicalProduct = {
-      name: cp.name,
-      brand: cp.brand,
-      ean: cp.ean,
-      imageUrl: cp.imageUrl,
-      carrefour: cp,
-    };
-
-    // EAN match
-    if (cp.ean && laReinaByEan.has(cp.ean)) {
-      const lr = laReinaByEan.get(cp.ean)!;
-      canon.lareina = lr;
-      usedLaReinaEans.add(cp.ean);
+  // Pass 1: Build canonical map by EAN
+  for (const p of allProducts) {
+    if (!p.ean) {
+      noEanProducts.push(p);
+      continue;
     }
 
-    canonical.push(canon);
+    if (!byEan.has(p.ean)) {
+      byEan.set(p.ean, {
+        name: p.name,
+        brand: p.brand,
+        ean: p.ean,
+        imageUrl: p.imageUrl,
+      });
+    }
+
+    const canon = byEan.get(p.ean)!;
+
+    // Prefer Carrefour for display metadata
+    if (p.source === "carrefour") {
+      canon.name = p.name;
+      canon.brand = p.brand;
+      canon.imageUrl = p.imageUrl ?? canon.imageUrl;
+    } else if (!canon.imageUrl) {
+      canon.imageUrl = p.imageUrl;
+    }
+
+    // Assign to source slot (first write wins)
+    if (p.source === "carrefour" && !canon.carrefour) canon.carrefour = p;
+    else if (p.source === "lareina" && !canon.lareina) canon.lareina = p;
+    else if (p.source === "coto" && !canon.coto) canon.coto = p;
   }
 
-  // Fuzzy match: only La Reina items with no EAN (rare) against canonical names.
-  // We intentionally skip EAN-having La Reina products that didn't match —
-  // different EAN = different product, don't fuzzy-match across brands.
-  const unmatchedLaReina = laReinaUnmatched; // only those with no EAN at all
+  const canonical = [...byEan.values()];
 
-  if (unmatchedLaReina.length > 0 && canonical.length > 0) {
+  // Pass 2: Fuzzy-match no-EAN products (Coto + rare La Reina) against canonical names
+  if (noEanProducts.length > 0 && canonical.length > 0) {
     const fuseItems = canonical.map((c, i) => ({
       i,
       norm: normalizeName(c.name),
     }));
 
-    // Tight threshold — only match when names are very similar
     const fuse = new Fuse(fuseItems, {
       keys: ["norm"],
       threshold: 0.2,
       includeScore: true,
     });
 
-    for (const lr of unmatchedLaReina) {
-      const normLr = normalizeName(lr.name);
-      const hits = fuse.search(normLr);
-      if (hits.length > 0 && !canonical[hits[0].item.i].lareina) {
-        canonical[hits[0].item.i].lareina = lr;
+    for (const p of noEanProducts) {
+      const norm = normalizeName(p.name);
+      const hits = fuse.search(norm);
+
+      const slotFree =
+        hits.length > 0 && !canonical[hits[0].item.i][p.source];
+
+      if (slotFree) {
+        const canon = canonical[hits[0].item.i];
+        if (p.source === "coto") {
+          canon.coto = p;
+          // If canon has no image, use Coto's
+          if (!canon.imageUrl) canon.imageUrl = p.imageUrl;
+        } else if (p.source === "lareina") {
+          canon.lareina = p;
+        }
       } else {
-        canonical.push({
-          name: lr.name,
-          brand: lr.brand,
-          ean: lr.ean,
-          imageUrl: lr.imageUrl,
-          lareina: lr,
-        });
+        // No match or slot taken — show as standalone
+        const standalone: CanonicalProduct = {
+          name: p.name,
+          brand: p.brand,
+          imageUrl: p.imageUrl,
+        };
+        standalone[p.source] = p;
+        canonical.push(standalone);
       }
     }
-  }
-
-  // La Reina EAN products that didn't match any Carrefour EAN → show as La Reina-only
-  for (const lr of [...laReinaByEan.values()]) {
-    if (!usedLaReinaEans.has(lr.ean!)) {
-      canonical.push({
-        name: lr.name,
-        brand: lr.brand,
-        ean: lr.ean,
-        imageUrl: lr.imageUrl,
-        lareina: lr,
-      });
+  } else {
+    // No canonicals yet — each no-EAN product is its own entry
+    for (const p of noEanProducts) {
+      const standalone: CanonicalProduct = {
+        name: p.name,
+        brand: p.brand,
+        imageUrl: p.imageUrl,
+      };
+      standalone[p.source] = p;
+      canonical.push(standalone);
     }
   }
 

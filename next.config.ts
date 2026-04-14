@@ -15,6 +15,10 @@ const nextConfig: NextConfig = {
         protocol: "http",
         hostname: "www.lareinaonline.com.ar",
       },
+      {
+        protocol: "https",
+        hostname: "static.cotodigital3.com.ar",
+      },
     ],
   },
 };

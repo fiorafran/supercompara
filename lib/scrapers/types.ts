@@ -1,4 +1,12 @@
-export type SupermarketSource = "carrefour" | "lareina";
+export type SupermarketSource = "carrefour" | "lareina" | "coto";
+
+export const ALL_SOURCES: SupermarketSource[] = ["carrefour", "coto", "lareina"];
+
+export const SUPERMARKET_META: Record<SupermarketSource, { name: string; color: string; dot: string }> = {
+  carrefour: { name: "Carrefour", color: "blue", dot: "🔵" },
+  lareina:   { name: "La Reina",  color: "yellow", dot: "🟡" },
+  coto:      { name: "Coto",      color: "red", dot: "🔴" },
+};
 
 export interface Product {
   source: SupermarketSource;
@@ -22,6 +30,7 @@ export interface CanonicalProduct {
   imageUrl?: string;
   carrefour?: Product;
   lareina?: Product;
+  coto?: Product;
 }
 
 export interface SearchResult {

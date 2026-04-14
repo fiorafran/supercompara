@@ -1,5 +1,5 @@
 import { SearchBar } from "@/components/SearchBar";
-import { ComparisonGrid } from "@/components/ComparisonGrid";
+import { ResultsClient } from "@/components/ResultsClient";
 import { searchAll } from "@/lib/search";
 import { Suspense } from "react";
 
@@ -31,7 +31,7 @@ async function Results({ query }: { query: string }) {
           </p>
         </div>
       ) : (
-        <ComparisonGrid products={result.products} />
+        <ResultsClient products={result.products} />
       )}
     </div>
   );
