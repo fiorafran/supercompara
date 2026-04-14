@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useState, FormEvent } from "react";
 
 interface SearchBarProps {
@@ -10,15 +10,13 @@ interface SearchBarProps {
 
 export function SearchBar({ defaultValue = "", autoFocus }: SearchBarProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [value, setValue] = useState(defaultValue);
   const [isLoading, setIsLoading] = useState(false);
 
-  const currentQuery = searchParams.get("q") ?? "";
-
   useEffect(() => {
+    setValue(defaultValue);
     setIsLoading(false);
-  }, [currentQuery]);
+  }, [defaultValue]);
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
