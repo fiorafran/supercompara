@@ -22,32 +22,34 @@ export function ProductCard({ product, isCheapest }: ProductCardProps) {
       target="_blank"
       rel="noopener noreferrer"
       className={`
-        block p-4 rounded-xl border transition-all hover:shadow-md
+        flex flex-col p-3 rounded-xl border transition-all hover:shadow-md
         ${isCheapest
           ? "border-green-400 bg-green-50 hover:border-green-500"
           : "border-gray-200 bg-white hover:border-blue-300"
         }
       `}
     >
-      <div className="flex items-center gap-1.5 mb-2 text-xs text-gray-500">
+      {/* Store name row */}
+      <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-1">
         <span>{LOGOS[product.source]}</span>
-        <span className="font-medium">{NAMES[product.source]}</span>
+        <span className="font-medium truncate">{NAMES[product.source]}</span>
+      </div>
+
+      {/* Badge row — always present (hidden if not cheapest) to keep layout stable */}
+      <div className="h-5 mb-1">
         {isCheapest && (
-          <span className="ml-auto text-green-700 font-semibold bg-green-100 px-1.5 py-0.5 rounded-full text-xs">
+          <span className="inline-block text-green-700 font-semibold bg-green-100 px-2 py-0.5 rounded-full text-xs leading-tight">
             Más barato
           </span>
         )}
       </div>
 
-      <div className="text-2xl font-bold text-gray-900 mb-1">
+      {/* Price — same vertical position in both cards */}
+      <div className="text-xl font-bold text-gray-900 leading-tight">
         {product.priceDisplay}
       </div>
 
-      {product.brand && (
-        <div className="text-xs text-gray-500 truncate">{product.brand}</div>
-      )}
-
-      <div className="mt-2 text-xs text-blue-600 hover:underline">
+      <div className="mt-auto pt-2 text-xs text-blue-600 hover:underline">
         Ver en sitio →
       </div>
     </a>

@@ -22,6 +22,7 @@ export function SearchBar({ defaultValue = "", autoFocus }: SearchBarProps) {
     e.preventDefault();
     const q = value.trim();
     if (q.length < 2) return;
+    if (q === defaultValue) return; // same query, results already shown
     setIsLoading(true);
     router.push(`/resultados?q=${encodeURIComponent(q)}`);
   }
